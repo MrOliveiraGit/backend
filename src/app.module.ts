@@ -6,11 +6,19 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
-
+console.log( join(__dirname, '..', 'avatars'))
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'avatars/'),
+      serveStaticOptions:{
+        index: false
+      }
+    }),
     UserModule,
     ConfigModule.forRoot(),
     MailerModule.forRoot({

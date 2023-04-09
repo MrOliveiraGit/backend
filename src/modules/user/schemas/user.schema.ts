@@ -15,6 +15,13 @@ export class User{
     email:string
     @Prop()
     avatar:string
+
+    constructor(user?: Partial<User>){
+        this.id = user?.id
+        this.firstName = user?.email
+        this.lastName = user?.lastName
+        this.avatar = user?.avatar
+    }
 }
 
 
