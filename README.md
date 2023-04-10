@@ -1,35 +1,35 @@
-to start the application just use
+To start the application, follow these steps:
 
-```
-npm i
+    Install the necessary dependencies by running npm i.
+    Start the Docker container by running docker compose up.
 
-docker compose up
-```
+Endpoints:
 
-
-Endpoints
-Create a User
-
-bash
+Create a User and save it to the database:
 
 POST /user
 
 Create a new user.
-Request
 
-json
-```
+Request:
+
+JSON
+
+perl
+
 {
   "firstName": "John",
   "lastName": "Doe",
   "email": "john.doe@example.com",
   "avatar": "https://example.com/avatar.jpg"
 }
-```
-Response
 
-json
-```
+Response:
+
+JSON
+
+perl
+
 {
   "user": {
     "id": 1,
@@ -39,18 +39,19 @@ json
     "avatar": "https://example.com/avatar.jpg"
   }
 }
-```
-Get a User by ID
 
-bash
+Get a User by ID:
 
 GET /user/:id
 
 Retrieve a user by ID from https://reqres.in/.
-Response
 
-json
-```
+Response:
+
+JSON
+
+perl
+
 {
   "user": {
     "id": 1,
@@ -60,33 +61,37 @@ json
     "avatar": "https://reqres.in/img/faces/1-image.jpg"
   }
 }
-```
-Get User Avatar by ID
 
-bash
+Get User Avatar by ID:
 
 GET /user/avatar/:id
 
 Retrieve a user's avatar by ID.
-Response
+
+Response:
+
+JSON
 
 json
-```
+
 {
   "avatar": "https://example.com/avatar.jpg"
 }
-```
-Retrieve a User from Database by ID
 
-sql
+Retrieve a User from Database by ID:
 
-GET /user/user-by-db/:id
+SQL
+
+GET /user/db/:id
 
 Retrieve a user from the database by ID.
-Response
 
-json
-```
+Response:
+
+JSON
+
+perl
+
 {
   "user": {
     "id": 1,
@@ -96,29 +101,32 @@ json
     "avatar": "https://example.com/avatar.jpg"
   }
 }
-```
-Update a User by ID
 
-bash
+Update a User by ID:
 
 PUT /user/:id
 
 Update a user by ID.
-Request
 
-json
-```
+Request:
+
+JSON
+
+perl
+
 {
   "firstName": "John",
   "lastName": "Doe",
   "email": "john.doe@example.com",
   "avatar": "https://example.com/new-avatar.jpg"
 }
-```
-Response
 
-json
-```
+Response:
+
+JSON
+
+perl
+
 {
   "user": {
     "id": 1,
@@ -128,37 +136,33 @@ json
     "avatar": "https://example.com/new-avatar.jpg"
   }
 }
-```
-Remove User Avatar by ID
 
-bash
+Remove User Avatar by ID:
 
 DELETE /user/avatar/:id
 
 Remove a user's avatar by ID.
-Response
 
-Avatar successfully removed
+Response:
 
-User Schema
+Avatar successfully removed.
 
-typescript
+User Schema:
 
-import { Prop } from '@nestjs/mongoose';
+TypeScript
+
+less
 
 export class User {
-  @Prop()
-  id: number;
-
-  @Prop()
-  firstName: string;
-
-  @Prop()
-  lastName: string;
-
-  @Prop()
-  email: string;
-
-  @Prop()
-  avatar: string;
+    @Prop()
+    id: number
+    @Prop()
+    firstName:string
+    @Prop()
+    lastName:string
+    @Prop()
+    email:string
+    @Prop()
+    avatar:string
+}
 }
