@@ -1,35 +1,49 @@
-To start the application, follow these steps:
+# How to Start the Application
 
-    Install the necessary dependencies by running npm i.
-    Start the Docker container by running docker compose up.
+To start the application, follow the steps below:
 
-Endpoints:
+1. Open your terminal and navigate to the root directory of the application.
 
-Create a User and save it to the database:
+2. Run the command `npm i` to install the project dependencies.
 
-POST /user
+3. Run the command `docker compose up` to start the database and the application.
 
-Create a new user.
+   **Note:** Docker will create a volume to persist the database data, even if you stop and restart the application container. If you want to remove all database data and the corresponding volume, run the following commands:
 
-Request:
+1. `docker compose down`
+2. `docker volume rm backend_mongodb_data_container`
 
-JSON
+With these steps, the application should be up and running and you can start interacting with the available endpoints.
 
-perl
+## Endpoints
 
+### Create a User and Save to Database
+
+**Endpoint:** `POST /user`
+
+This endpoint allows you to create a new user and save it to the database. To create a user, you need to send a JSON object in the request body with the following properties:
+
+- `id`: number, required
+- `firstName`: string, required
+- `lastName`: string, required
+- `email`: string, required
+- `avatar`: string, optional
+
+Example request body:
+
+```json
 {
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "avatar": "https://example.com/avatar.jpg"
+    "id": "1"
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "avatar": "https://example.com/avatar.jpg"
 }
+```
 
-Response:
+Example response body:
 
-JSON
-
-perl
-
+```json
 {
   "user": {
     "id": 1,
@@ -40,18 +54,22 @@ perl
   }
 }
 
-Get a User by ID:
+```
+### Retrive user in https://reqres.in/.
 
-GET /user/:id
+**Endpoint:** `GET /user/:id`
 
-Retrieve a user by ID from https://reqres.in/.
+This enpoint retrives a user from reqres.in with a id. To retrive a user, you need to send a id in param.
 
-Response:
+- `id`: number
 
-JSON
+Example request url:
 
-perl
+GET : `localhost:3000/user/1`
 
+Example response body:
+
+```json
 {
   "user": {
     "id": 1,
@@ -62,107 +80,6 @@ perl
   }
 }
 
-Get User Avatar by ID:
+```
+**Endpoint:** note, the fields is diferent `first_name`, `last_name`
 
-GET /user/avatar/:id
-
-Retrieve a user's avatar by ID.
-
-Response:
-
-JSON
-
-json
-
-{
-  "avatar": "https://example.com/avatar.jpg"
-}
-
-Retrieve a User from Database by ID:
-
-SQL
-
-GET /user/db/:id
-
-Retrieve a user from the database by ID.
-
-Response:
-
-JSON
-
-perl
-
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@example.com",
-    "avatar": "https://example.com/avatar.jpg"
-  }
-}
-
-Update a User by ID:
-
-PUT /user/:id
-
-Update a user by ID.
-
-Request:
-
-JSON
-
-perl
-
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "avatar": "https://example.com/new-avatar.jpg"
-}
-
-Response:
-
-JSON
-
-perl
-
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@example.com",
-    "avatar": "https://example.com/new-avatar.jpg"
-  }
-}
-
-Remove User Avatar by ID:
-
-DELETE /user/avatar/:id
-
-Remove a user's avatar by ID.
-
-Response:
-
-Avatar successfully removed.
-
-User Schema:
-
-TypeScript
-
-less
-
-export class User {
-    @Prop()
-    id: number
-    @Prop()
-    firstName:string
-    @Prop()
-    lastName:string
-    @Prop()
-    email:string
-    @Prop()
-    avatar:string
-}
-}
