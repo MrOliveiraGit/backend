@@ -9,7 +9,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-console.log( join(__dirname, '..', 'avatars'))
 
 @Module({
   imports: [

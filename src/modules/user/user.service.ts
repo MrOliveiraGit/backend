@@ -1,14 +1,15 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema'
 import { unlink,readFile } from 'node:fs/promises';
 import { MailerService } from '@nestjs-modules/mailer';
 import axios from 'axios';
 import { ClientProxy } from '@nestjs/microservices';
-import multer from 'multer';
+import * as fs from 'fs';
+import * as crypto from 'crypto'
+import { error } from 'node:console';
 
 
 
@@ -16,6 +17,8 @@ import multer from 'multer';
 @Injectable()
 export class UserService {
   
+  baseUrl = 'https://reqres.in/api/users/'
+
 
   constructor(@Inject('USER_SERVICE') private client: ClientProxy,private readonly mailerService: MailerService,@InjectModel(User.name) private readonly userModel: Model<User>){}
 
@@ -25,43 +28,77 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    try{
-      const { id, email } = createUserDto;
-      const userExists = await this.userModel.findOne({ id });
-      
-      if (userExists) throw new BadRequestException('User already exists');
-      
-      const user = await this.userModel.create(createUserDto);
-      
-      if (!user) throw new BadRequestException('User cannot be created');
-      
-      if (email) this.sendEmail(email);
-      
-      this.pushRMQ('CREATED', { user });
-      
-      return user;
+   
+    const { id, email } = createUserDto;
+    const userExists = await this.userModel.findOne({ id });
+    
+    if (userExists) throw new BadRequestException('User already exists');
+    
+    const user = await this.userModel.create(createUserDto);
+    
+    if (!user) throw new BadRequestException('User cannot be created');
+    
+    if (email) this.sendEmail(email);
+    
+    this.pushRMQ('CREATED', { user });
+    
+    return user;
 
-    }catch(error){
-      this.pushRMQ('ERROR',JSON.stringify(error))
-      throw new InternalServerErrorException('error on create user')
-    }
   }
   
-  async retriveByApi(id: number): Promise<User> {
+  async retriveByApi(id: number) {
     try{
-      const response = await axios.get<User>(`https://reqres.in/api/users/${id}`)
+      const response = (await axios.get(`${this.baseUrl}${id}`)).data
       return response.data
-
     }catch(error){
       this.pushRMQ('ERROR',error)
       throw new Error('Error on retrive by api')
     }
   }
 
-  async retriveAvatar(id:number){
-    const { avatar } = await this.retriveByApi(id)
-    return avatar
+  async getAvatar(userId: number) {
+    const path = 'avatars/'
+    const user = await this.userModel.findOne({ id: userId })
+    if( !user || !user.firstName  ) throw new NotFoundException('user not found')
+    try {
+      const hash = this.hash64(user)
+      const haveIamge = await this.directoryListAvatars(hash)
+      if(haveIamge){
+        return `${path}${hash}.jpg`
+      }else{
+        const response = await axios({
+          method: 'get',
+          url: user.avatar,
+          responseType: 'arraybuffer'
+        });
+        const buffer = Buffer.from(response.data, 'binary');
+        await fs.promises.writeFile(`${path}${hash}.jpg`, buffer);
+        return `${path}${hash}.jpg`
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(" Error on hash file")
+    }
   }
+
+  hash64 ({ id,firstName }: User){
+    return crypto.createHash('sha256').update(id + firstName).digest('base64').replace('/', '_')
+  }
+  async directoryListAvatars(hashedImage){
+
+    const path = 'avatars/'
+    try {
+      const files = await fs.promises.readdir(path);
+      const exists = files.some(file => {
+        const fileName = file.split('.')[0]
+        return fileName === hashedImage
+      });
+  
+      return exists
+    } catch (error) {
+      throw new InternalServerErrorException('Error on hash')
+    }
+  }
+  
 
   async sendEmail(email){
     try{
@@ -75,7 +112,7 @@ export class UserService {
         })
     }catch(error){
       this.pushRMQ('ERROR',error)
-      throw new Error('error on send emil')
+      throw new Error('error on send emial')
     }
      
   }
@@ -86,13 +123,19 @@ export class UserService {
 
 
   async removeAvatar(id:number): Promise<User>{
-    const { AVATARS_PATH } = process.env
-    try{
-      const user = await this.userModel.findOne({ id })
-      await unlink(`${AVATARS_PATH}/${user.avatar}`)
-      return await this.userModel.findOneAndUpdate({ id }, { avatar: '' },{ new: true})
-    }catch(error){
-      throw new Error('error on delete avatar and image')
-    }
+    const user = await this.userModel.findOne({ id })
+    if(!user) throw new NotFoundException('user not found')
+    const hash = this.hash64(user)
+    await unlink(`avatars/${hash}.jpg`)
+    return await this.userModel.findOneAndUpdate({ id }, { avatar: '' },{ new: true})
   }
+
+  async updateUser(id:number,updateDto){
+    const user = await this.userModel.findOne({ id })
+    if(!user) throw new NotFoundException('user not found')
+    return await this.userModel.findOneAndUpdate({ id } , { ...updateDto },{ new: true})
+  }
+
+
+
 }

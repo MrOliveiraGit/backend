@@ -1,28 +1,164 @@
-#Backend Test
+to start the application just use
 
-This is a NestJS project that contains routes for managing users and their avatars.
-Routes
+```
+npm i
 
-The following routes are available:
+docker compose up
+```
 
-    POST /user: Creates a new user.
 
-    GET /user/:id: Returns a user with the specified ID. The user is obtained from an external API (https://reqres.in/).
+Endpoints
+Create a User
 
-    GET /user/:id/avatar: Returns the avatar of the user with the specified ID. The avatar is stored on disk and accessed from the file system.
+bash
 
-    POST /user/:id/avatar: Updates the avatar of the user with the specified ID. The avatar is sent as a multipart/form-data file and stored on disk. The file path is recorded in the database.
-    GET /user/user-by-db/:id: Returns a user with the specified ID. The user is obtained from the database.
-    
-    DELETE /user/:id/avatar: Removes the avatar of the user with the specified ID. The avatar is removed from the file system and the file path is removed from the database.
+POST /user
 
-How to Access the Routes
+Create a new user.
+Request
 
-The routes can be accessed using the appropriate HTTP method and URL. Details for each route can be found in the section above.
-How to Start the Project
+json
+```
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
+Response
 
-To start the project, you can use Docker Compose with the following command:
+json
+```
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "avatar": "https://example.com/avatar.jpg"
+  }
+}
+```
+Get a User by ID
 
-```docker compose up```
+bash
 
-This command will download the necessary dependencies, build the Docker image, and start the container. You can then access the routes using the appropriate URL in your browser or HTTP client.
+GET /user/:id
+
+Retrieve a user by ID from https://reqres.in/.
+Response
+
+json
+```
+{
+  "user": {
+    "id": 1,
+    "email": "george.bluth@reqres.in",
+    "first_name": "George",
+    "last_name": "Bluth",
+    "avatar": "https://reqres.in/img/faces/1-image.jpg"
+  }
+}
+```
+Get User Avatar by ID
+
+bash
+
+GET /user/avatar/:id
+
+Retrieve a user's avatar by ID.
+Response
+
+json
+```
+{
+  "avatar": "https://example.com/avatar.jpg"
+}
+```
+Retrieve a User from Database by ID
+
+sql
+
+GET /user/user-by-db/:id
+
+Retrieve a user from the database by ID.
+Response
+
+json
+```
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "avatar": "https://example.com/avatar.jpg"
+  }
+}
+```
+Update a User by ID
+
+bash
+
+PUT /user/:id
+
+Update a user by ID.
+Request
+
+json
+```
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "avatar": "https://example.com/new-avatar.jpg"
+}
+```
+Response
+
+json
+```
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "avatar": "https://example.com/new-avatar.jpg"
+  }
+}
+```
+Remove User Avatar by ID
+
+bash
+
+DELETE /user/avatar/:id
+
+Remove a user's avatar by ID.
+Response
+
+Avatar successfully removed
+
+User Schema
+
+typescript
+
+import { Prop } from '@nestjs/mongoose';
+
+export class User {
+  @Prop()
+  id: number;
+
+  @Prop()
+  firstName: string;
+
+  @Prop()
+  lastName: string;
+
+  @Prop()
+  email: string;
+
+  @Prop()
+  avatar: string;
+}

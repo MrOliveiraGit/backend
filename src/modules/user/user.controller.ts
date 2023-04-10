@@ -1,17 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete,  UploadedFile,
-  UseInterceptors,
-  Res,
-  StreamableFile, } from '@nestjs/common';
-  import { FileInterceptor } from '@nestjs/platform-express';
-  import { diskStorage } from 'multer'
+import { Controller, Get, Post, Body, Param, Delete, Res, InternalServerErrorException, Put,
+ } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import e, { Express,Response } from 'express';
-import { extname, join } from 'path'
 import { User } from './schemas/user.schema';
-import { readdir } from 'fs';
-
+import { Response } from 'express';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 
 @Controller('user')
@@ -21,38 +14,36 @@ export class UserController {
 
   /**
    * 
-   * For create a new user
+   * For create a new user and save in db
    * 
    * @param createUserDto 
    * @returns USer
    */
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return await this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto,@Res() res: Response){
+    const user = await this.userService.create(createUserDto);
+    res.status(201).json({ user: user })
   }
 
 
     /**
-   * t
+   * 
    * this endpoint return a user from https://reqres.in/
    * 
    * @param id 
    * @returns 
    */
     @Get(':id')
-    findOne(@Param('id') id: string) {
-      return this.userService.retriveByApi(+id);
+    async findOne(@Param('id') id: number,@Res() res: Response) {
+      const user = await this.userService.retriveByApi(id)
+      res.status(200).json({ user: user })
     }
 
 
-    @Get(':id/avatar')
+    @Get('avatar/:id')
     async findAvatar(@Param('id') id: number,@Res() res: Response){
-      const file = await this.userService.retriveAvatar(id)
-      const files = readdir('../../../avatars',( err, files )=>{
-        files.filter( file => console.log(file))
-      })
-      res.download(file)
-      
+      const avatar = await this.userService.getAvatar(id);
+      res.status(200).json({avatar: avatar})
     }
     
 
@@ -63,9 +54,25 @@ export class UserController {
    * @param id 
    * @returns User
    */
-  @Get('/user-by-db/:id')
-  retriveUser(@Param('id') id) {
-    return this.userService.retriveByDb(id);
+  @Get('/db/:id')
+  async retriveUser(@Param('id') id,@Res() res: Response) {
+
+    const user = await this.userService.retriveByDb(id);
+    res.status(200).json({ user: user })
+
+  }
+/**
+ * 
+ * this end point update the user storage in db
+ * 
+ * @param id number
+ * @param updateUserDto 
+ * @param res 
+ */
+  @Put('/:id')
+  async updateUSer(@Param('id') id: number , @Body() updateUserDto: UpdateUserDto,@Res() res: Response) {
+    const user = await this.userService.updateUser(id,updateUserDto);
+    res.status(200).json({ user: user })
   }
 
   /**
@@ -76,8 +83,9 @@ export class UserController {
    * @returns User
    */
 
-  @Delete(':id/avatar')
-  async removeAvatar(@Param('id') id: string) {
-    return this.userService.removeAvatar(+id);
+  @Delete('avatar/:id')
+  async removeAvatar(@Param('id') id: number, @Res() res: Response): Promise<void> {
+    await this.userService.removeAvatar(id);
+    res.status(200).send('Avatar successfully removed');
   }
 }
